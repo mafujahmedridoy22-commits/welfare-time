@@ -584,16 +584,6 @@ if (dateSelector && dateInput && typeof flatpickr === 'function') {
     });    
 }
 
-// const dateSelector = document.getElementById('date-selector');
-// if (dateSelector && typeof flatpickr === 'function') {
-//     flatpickr(dateSelector, {
-//         locale: 'ja',
-//         dateFormat: 'Y-m-d',
-//         defaultDate: targetDateStr,
-//         onChange: (selectedDates, dateStr) => { if (dateStr) window.location.search = "date=" + dateStr; }
-//     });
-// }
-
 document.addEventListener('DOMContentLoaded', () => {
     if (document.getElementById('shop-grid')) fetchData();
 });
