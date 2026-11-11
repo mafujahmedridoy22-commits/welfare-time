@@ -5,6 +5,21 @@ const LABEL_NOW_OPEN = '🟢 営業中';
 const LABEL_PREPARING = '🟡 準備中';
 const LABEL_CLOSED = '🔵 営業終了';
 
+/**
+ * HTML 特殊文字をエスケープする。
+ * @param {string} s
+ * @returns {string}
+ */
+function escapeHtml(s) {
+    return (s == null ? '' : String(s)).replace(/[&<>"']/g, c => ({
+        '&': '&amp;',
+        '<': '&lt;',
+        '>': '&gt;',
+        '"': '&quot;',
+        "'": '&#39;'
+    }[c]));
+}
+
 let currentData = null;
 let master = null;
 // 描画したカードの id を並び順に持つ。マップで先頭に移したカードを元の順に戻すのに使う。
@@ -196,15 +211,25 @@ async function fetchData() {
  * @param {'grid'|'list'} view - カードの表示形式
  */
 function buildCardHtml(shop, status, view) {
-    const category = shop.category || '店舗';
+    const category = escapeHtml(shop.category || '店舗');
+    const name = escapeHtml(shop.name);
+    const location = escapeHtml(shop.location);
+    const headline = shop.headline ? escapeHtml(shop.headline) : '';
+    const note = shop.note ? escapeHtml(shop.note) : '';
+    const startTime = escapeHtml(shop.start_time);
+    const endTime = escapeHtml(shop.end_time);
+    const id = escapeHtml(shop.id);
     // 常設ではない店舗や大学の管理外の店舗は、大学が公開している情報と区別できるようにバッジを付ける
     const temporaryBadge = shop.temporary
         ? '<span class="px-1.5 py-0.5 rounded text-[10px] font-bold bg-amber-100 dark:bg-amber-900/40 text-amber-700 dark:text-amber-300 tracking-wider shrink-0">臨時</span>'
         : '';
+    const linkHtml = (shop.url && /^https?:\/\//.test(shop.url))
+        ? `<a href="${escapeHtml(shop.url)}" target="_blank" class="absolute inset-0 z-10" aria-label="${name}の情報を開く"></a>`
+        : '';
     let html = '';
     if (view === 'grid') {
         html = `
-        <div id="card-${shop.id}" data-location="${shop.location}" class="group relative flex flex-col bg-white dark:bg-slate-800 rounded-xl border border-slate-200 dark:border-slate-700 p-3 shadow-sm hover:shadow-md transition-all duration-200 hover:-translate-y-1">
+        <div id="card-${id}" data-location="${location}" class="group relative flex flex-col bg-white dark:bg-slate-800 rounded-xl border border-slate-200 dark:border-slate-700 p-3 shadow-sm hover:shadow-md transition-all duration-200 hover:-translate-y-1">
             <div class="flex justify-between items-start mb-2 gap-2">
                 <div class="flex items-center gap-1 min-w-0">
                     <span class="px-1.5 py-0.5 rounded text-[10px] font-bold bg-slate-100 dark:bg-slate-700 text-slate-500 dark:text-slate-400 uppercase tracking-wider shrink-0">${category}</span>
@@ -212,49 +237,49 @@ function buildCardHtml(shop, status, view) {
                 </div>
                 <span class="px-2 py-0.5 rounded-full text-[10px] font-black tracking-tight shrink-0 ${status.class}">${status.label}</span>
             </div>
-            <h3 class="font-black text-slate-900 dark:text-white mb-1 leading-tight line-clamp-2" title="${shop.name}">${shop.name}</h3>
-            ${shop.headline ? `<p class="text-[10px] text-ksu dark:text-blue-400 font-bold line-clamp-1 mb-2">${shop.headline}</p>` : ''}
+            <h3 class="font-black text-slate-900 dark:text-white mb-1 leading-tight line-clamp-2" title="${name}">${name}</h3>
+            ${headline ? `<p class="text-[10px] text-ksu dark:text-blue-400 font-bold line-clamp-1 mb-2">${headline}</p>` : ''}
             
             <div class="mt-auto pt-2 border-t border-slate-50 dark:border-slate-700/50">
                 <div class="flex items-center justify-between gap-2 text-[10px] sm:text-[11px]">
                     <div class="flex items-center gap-1 text-slate-500 dark:text-slate-400 min-w-0">
                         <i class="bi bi-geo-alt shrink-0"></i>
-                        <span class="truncate">${shop.location}</span>
+                        <span class="truncate">${location}</span>
                     </div>
                     <div class="flex items-center gap-1 font-bold text-slate-700 dark:text-slate-300 shrink-0">
                         <i class="bi bi-clock shrink-0 text-ksu dark:text-blue-400"></i>
-                        <span>${shop.start_time}～${shop.end_time}</span>
+                        <span>${startTime}～${endTime}</span>
                     </div>
                 </div>
             </div>
             
-            ${shop.note ? `<div class="mt-2 p-1.5 bg-slate-50 dark:bg-slate-900/50 rounded text-[10px] text-slate-500 dark:text-slate-400 leading-relaxed border border-slate-100 dark:border-slate-800">${shop.note}</div>` : ''}
-            ${shop.url ? `<a href="${shop.url}" target="_blank" class="absolute inset-0 z-10" aria-label="${shop.name}の情報を開く"></a>` : ''}
+            ${note ? `<div class="mt-2 p-1.5 bg-slate-50 dark:bg-slate-900/50 rounded text-[10px] text-slate-500 dark:text-slate-400 leading-relaxed border border-slate-100 dark:border-slate-800">${note}</div>` : ''}
+            ${linkHtml}
         </div>`;
     } else {
         html = `
-        <div id="card-${shop.id}" data-location="${shop.location}" class="group relative flex flex-col bg-white dark:bg-slate-800 rounded-xl border border-slate-200 dark:border-slate-700 p-4 shadow-sm hover:shadow-md transition-all duration-200">
+        <div id="card-${id}" data-location="${location}" class="group relative flex flex-col bg-white dark:bg-slate-800 rounded-xl border border-slate-200 dark:border-slate-700 p-4 shadow-sm hover:shadow-md transition-all duration-200">
             <div class="flex justify-between items-start mb-2 gap-2">
                 <div class="flex items-center gap-2 min-w-0">
                     <span class="px-1.5 py-0.5 rounded text-[10px] font-bold bg-slate-100 dark:bg-slate-700 text-slate-500 dark:text-slate-400 uppercase tracking-wider shrink-0">${category}</span>
                     ${temporaryBadge}
-                    <h3 class="font-black text-slate-900 dark:text-white truncate" title="${shop.name}">${shop.name}</h3>
+                    <h3 class="font-black text-slate-900 dark:text-white truncate" title="${name}">${name}</h3>
                 </div>
                 <span class="px-2 py-0.5 rounded-full text-[10px] font-black tracking-tight shrink-0 ${status.class}">${status.label}</span>
             </div>
-            ${shop.headline ? `<p class="text-[10px] text-ksu dark:text-blue-400 font-bold mb-2 truncate">${shop.headline}</p>` : ''}
+            ${headline ? `<p class="text-[10px] text-ksu dark:text-blue-400 font-bold mb-2 truncate">${headline}</p>` : ''}
             <div class="flex items-center justify-between gap-4 text-[11px] mt-auto">
                 <div class="flex items-center gap-1.5 text-slate-500 dark:text-slate-400 min-w-0">
                     <i class="bi bi-geo-alt shrink-0"></i>
-                    <span class="truncate">${shop.location}</span>
+                    <span class="truncate">${location}</span>
                 </div>
                 <div class="flex items-center gap-1.5 font-bold text-slate-700 dark:text-slate-300 shrink-0">
                     <i class="bi bi-clock shrink-0 text-ksu dark:text-blue-400"></i>
-                    <span>${shop.start_time}～${shop.end_time}</span>
+                    <span>${startTime}～${endTime}</span>
                 </div>
             </div>
-            ${shop.note ? `<div class="mt-2 text-[10px] text-slate-400 dark:text-slate-500 line-clamp-1 italic">${shop.note}</div>` : ''}
-            ${shop.url ? `<a href="${shop.url}" target="_blank" class="absolute inset-0 z-10" aria-label="${shop.name}の情報を開く"></a>` : ''}
+            ${note ? `<div class="mt-2 text-[10px] text-slate-400 dark:text-slate-500 line-clamp-1 italic">${note}</div>` : ''}
+            ${linkHtml}
         </div>`;
     }
     return html;
@@ -324,9 +349,9 @@ function renderProvenance(sources) {
     // 3. Cafeteria PDF Sources
     if (sources && sources.length > 0) {
         html += sources.map(s => `
-            <a href="${s.url}" class="flex items-center gap-2 p-2 rounded-lg hover:bg-slate-100 dark:hover:bg-slate-700 text-sm text-slate-600 dark:text-slate-300 transition-colors" target="_blank">
+            <a href="${escapeHtml(s.url)}" class="flex items-center gap-2 p-2 rounded-lg hover:bg-slate-100 dark:hover:bg-slate-700 text-sm text-slate-600 dark:text-slate-300 transition-colors" target="_blank">
                 <i class="bi bi-file-pdf text-red-500"></i>
-                <span class="flex-1 text-truncate">学食営業カレンダー（${s.name}）</span>
+                <span class="flex-1 text-truncate">学食営業カレンダー（${escapeHtml(s.name)}）</span>
                 <i class="bi bi-box-arrow-up-right text-[10px]"></i>
             </a>
         `).join('');
