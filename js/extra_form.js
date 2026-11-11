@@ -33,7 +33,7 @@ document.addEventListener('DOMContentLoaded', () => {
     const today = () => new Date().toLocaleDateString('sv-SE', {
         timeZone: 'Asia/Tokyo'
     });
-    const escapeHtml = (s) => s.replace(/[&<>"']/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
+    
     const toMinutes = (hhmm) => { const [h, m] = hhmm.split(':').map(Number); return h * 60 + m; };
 
     function addDays(dateStr, days) {
@@ -125,10 +125,10 @@ document.addEventListener('DOMContentLoaded', () => {
         els.preview.className = view === 'grid' ? 'grid grid-cols-1 sm:grid-cols-2 gap-3' : 'flex flex-col gap-2';
         rows.filter(r => r.date && r.start && r.end).forEach(r => {
             const shop = {
-                id: 'preview', temporary: true, category: escapeHtml(v.category),
-                name: escapeHtml(v.name || '（店名）'), location: escapeHtml(v.location || '（場所）'),
-                headline: escapeHtml(v.headline), note: escapeHtml(v.note),
-                url: /^https?:\/\//.test(v.url) ? escapeHtml(v.url) : '',
+                id: 'preview', temporary: true, category: v.category,
+                name: v.name || '（店名）', location: v.location || '（場所）',
+                headline: v.headline, note: v.note,
+                url: v.url,
                 start_time: r.start, end_time: r.end,
             };
             const wrapper = document.createElement('div');
